@@ -20,7 +20,7 @@ const CityPlanningSimulator = () => {
 
         const animate = () => {
             requestAnimationFrame(animate);
-            cube.rotation.x += 0.05;
+            cube.rotation.x += 0.00;
             cube.rotation.y += 0.05;
             renderer.render(scene, camera);
         };

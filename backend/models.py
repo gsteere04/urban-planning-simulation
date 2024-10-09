@@ -1,14 +1,24 @@
-from sqlalchemy import Column, Integer, String, Float, create_engine
+from sqlalchemy import Column, Integer, String, Float, create_engine, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import enum 
+
 
 Base = declarative_base()
+
+class BuildingType(enum.Enum):
+    RESIDENTIAL = "residential"
+    COMMERCIAL = "commercial"
+    INDUSTRIAL = "industrial"
+    GOVERNMENTAL = "governmental"
+    TRANSPORTATION = "transportation"
+    OTHER = "other"
 
 class Building(Base):
     __tablename__ = 'buildings'
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     name = Column(String, nullable=False)
-    type = Column(String)
+    type = Column(Enum(BuildingType), nullable=False) 
 
 class Population(Base):
     __tablename__ = 'population'
