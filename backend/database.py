@@ -1,9 +1,10 @@
-from sqlalchemy.orm import Session
-from models import SessionLocal, Base, engine
+from decouple import config
+from sqlmodel import Session, create_engine
+
+DATABASE_URL: str = config("DATABASE_URL")
+engine = create_engine(DATABASE_URL)
+
 
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    with Session(engine) as session:
+        yield session
