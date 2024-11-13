@@ -34,7 +34,20 @@ export const createScene = (canvas: HTMLCanvasElement) => {
     
 
     // Function to add lights to the scene
-   
+   const setupLighting = () => {
+    const lights = [
+       new THREE.AmbientLight(0xffffff, 0.2),
+       new THREE.DirectionalLight(0xffffff, 0.3),
+       new THREE.DirectionalLight(0xffffff, 0.3),
+       new THREE.DirectionalLight(0xffffff, 0.3)
+    ];
+
+    lights[1].position.set(0, 1, 0);
+    lights[1].position.set(1, 1, 0);
+    lights[1].position.set(0, 1, 1);
+
+    scene.add(...lights);
+   }
 
     // Function to initialize controls
     const initializeControls = (camera: THREE.PerspectiveCamera) => {
