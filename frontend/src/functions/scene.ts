@@ -9,7 +9,8 @@ export const createScene = (canvas: HTMLCanvasElement) => {
     scene.background = new THREE.Color('lightgray')
 
     interface City {
-        size: number
+        size: number;
+        data: { building: string }[][];
     };
 
     let meshes = []
@@ -20,13 +21,28 @@ export const createScene = (canvas: HTMLCanvasElement) => {
         for (let x = 0; x < city.size; x++) {
             const column: THREE.Mesh[] = []; // specifies type for array column 
             for (let y = 0; y < city.size; y++){
+                // Ground geometry
                 const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Use a basic material for testing
+                const material = new THREE.MeshBasicMaterial({ color: "green" }); // Use a basic material for testing
                 const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set(x, 0, y);
+                mesh.position.set(x, -0.5, y);
                 mesh.castShadow = true; // Enable shadows for the object
                 scene.add(mesh);
                 column.push(mesh);
+
+                // Building geometry
+                const tile = city.data[x][y];
+
+                if (tile.building === "building") {
+                const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
+                const buildingMaterial = new THREE.MeshBasicMaterial({ color: 0x777777 }); // Use a basic material for testing
+                const buildingMesh = new THREE.Mesh(buildingGeometry, buildingMaterial);
+                buildingMesh.position.set(x, 0.5, y);
+                buildingMesh.castShadow = true; // Enable shadows for the object
+                scene.add(buildingMesh);
+                column.push(buildingMesh);
+                }
+                
             }
             meshes.push(column);
         }
@@ -64,6 +80,9 @@ export const createScene = (canvas: HTMLCanvasElement) => {
 
     // Use the createCamera function to create the camera
     const camera = createCamera(window.innerWidth / window.innerHeight);
+
+    // Call the setUpLighting
+    setupLighting()
 
     // Set the renderer size
     renderer.setSize(window.innerWidth, window.innerHeight);
