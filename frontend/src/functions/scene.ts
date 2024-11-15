@@ -8,6 +8,7 @@ export const createScene = (canvas: HTMLCanvasElement) => {
     
     scene.background = new THREE.Color('lightgray')
 
+    //
     interface City {
         size: number;
         data: { building: string }[][];
@@ -18,6 +19,7 @@ export const createScene = (canvas: HTMLCanvasElement) => {
     const initialize = (city: City) => {
         scene.clear();
         meshes = [];
+        
         for (let x = 0; x < city.size; x++) {
             const column: THREE.Mesh[] = []; // specifies type for array column 
             for (let y = 0; y < city.size; y++){
