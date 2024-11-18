@@ -5,7 +5,7 @@ import { createCity, initialize } from '../src/functions/city';
 import * as THREE from 'three';
 
 const SimulationPage: React.FC = () => {
-    const city = createCity(12); // Create the city with a specified size
+    const city = createCity(24); // Create the city with a specified size
 
     useEffect(() => {
         const canvas = document.getElementById('render-target') as HTMLCanvasElement;
