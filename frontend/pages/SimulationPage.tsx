@@ -1,20 +1,32 @@
 import React, { useEffect } from 'react';
 import '../styles/SimulationPage.css';
-import { createScene } from '../src/functions/scene';
+import { createScene, setupLighting } from '../src/functions/scene';
 import { createCity, initialize } from '../src/functions/city';
 import * as THREE from 'three';
 
 const SimulationPage: React.FC = () => {
-    const city = createCity(24); // Create the city with a specified size
+    const city = createCity(8); // Create the city with a specified size
 
     useEffect(() => {
         const canvas = document.getElementById('render-target') as HTMLCanvasElement;
         const { scene, camera, renderer, controls } = createScene(canvas);
         initialize(city); // Initialize the scene with the city
 
+        // Raycaster and mouse vector
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        const onMouseMove = (event: MouseEvent) => {
+            // Calculate mouse position in normalized device coordinates
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        };
+
         // Initialize the scene with the city data
         const initializeScene = () => {
             scene.clear(); // Clear the previous scene
+            setupLighting(scene)
+
             let delay = 0; // Initialize delay
 
             // Create an array of all possible coordinates
@@ -35,7 +47,7 @@ const SimulationPage: React.FC = () => {
             coordinates.forEach(({ x, y }) => {
                 // Ground geometry
                 const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshBasicMaterial({ color: "green" });
+                const material = new THREE.MeshLambertMaterial({ color: "green" });
                 const mesh = new THREE.Mesh(geometry, material);
                 mesh.position.set(x, -0.5, y);
                 scene.add(mesh); // Add ground tile to the scene
@@ -45,7 +57,7 @@ const SimulationPage: React.FC = () => {
                     // Use setTimeout to add buildings with a delay
                     setTimeout(() => {
                         const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
-                        const buildingMaterial = new THREE.MeshBasicMaterial({ color: 0x777777 });
+                        const buildingMaterial = new THREE.MeshStandardMaterial({ color: 0x777777 });
                         const buildingMesh = new THREE.Mesh(buildingGeometry, buildingMaterial);
                         buildingMesh.position.set(x, 0.5, y);
                         scene.add(buildingMesh); // Add building to the scene

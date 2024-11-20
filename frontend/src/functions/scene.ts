@@ -25,7 +25,7 @@ export const createScene = (canvas: HTMLCanvasElement) => {
             for (let y = 0; y < city.size; y++){
                 // Ground geometry
                 const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshBasicMaterial({ color: "green" }); // Use a basic material for testing
+                const material = new THREE.MeshStandardMaterial({ color: "green" }); // Use MeshStandardMaterial
                 const mesh = new THREE.Mesh(geometry, material);
                 mesh.position.set(x, -0.5, y);
                 mesh.castShadow = true; // Enable shadows for the object
@@ -37,7 +37,7 @@ export const createScene = (canvas: HTMLCanvasElement) => {
 
                 if (tile.building === "building") {
                 const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
-                const buildingMaterial = new THREE.MeshBasicMaterial({ color: 0x777777 }); // Use a basic material for testing
+                const buildingMaterial = new THREE.MeshStandardMaterial({ color: 0x777777 }); // Use MeshStandardMaterial
                 const buildingMesh = new THREE.Mesh(buildingGeometry, buildingMaterial);
                 buildingMesh.position.set(x, 0.5, y);
                 buildingMesh.castShadow = true; // Enable shadows for the object
@@ -50,22 +50,6 @@ export const createScene = (canvas: HTMLCanvasElement) => {
         }
     }
     
-
-    // Function to add lights to the scene
-   const setupLighting = () => {
-    const lights = [
-       new THREE.AmbientLight(0xffffff, 0.2),
-       new THREE.DirectionalLight(0xffffff, 0.3),
-       new THREE.DirectionalLight(0xffffff, 0.3),
-       new THREE.DirectionalLight(0xffffff, 0.3)
-    ];
-
-    lights[1].position.set(0, 1, 0);
-    lights[1].position.set(1, 1, 0);
-    lights[1].position.set(0, 1, 1);
-
-    scene.add(...lights);
-   }
 
     // Function to initialize controls
     const initializeControls = (camera: THREE.PerspectiveCamera) => {
@@ -84,7 +68,7 @@ export const createScene = (canvas: HTMLCanvasElement) => {
     const camera = createCamera(window.innerWidth / window.innerHeight);
 
     // Call the setUpLighting
-    setupLighting()
+    setupLighting(scene)
 
     // Set the renderer size
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -95,6 +79,27 @@ export const createScene = (canvas: HTMLCanvasElement) => {
     // Initialize controls
     const controls = initializeControls(camera);
 
-    return { scene, camera, renderer, controls, initialize };
+    return { 
+        scene, 
+        camera, 
+        renderer, 
+        controls, 
+        initialize, 
+        setupLighting
+    };
 
 };
+
+export const setupLighting = (scene: THREE.Scene) => {
+    // Ambient Light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(ambientLight);
+
+    // Directional Light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 8);
+    directionalLight.position.set(10, 10, 10);
+    directionalLight.castShadow = true; // Enable shadows
+    scene.add(directionalLight);
+};
+
+
