@@ -1,45 +1,59 @@
-/* frontend/pages/SimulationPage.css */
+/* SimulationPage.css */
 
 .simulation-container {
     position: relative;
-    width: 100vw; /* Full viewport width */
-    height: 100vh; /* Full viewport height */
-    overflow: hidden; /* Prevent overflow */
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-.menu {
+/* Toolbar styling */
+.toolbar {
     position: absolute;
-    top: 20px; /* Position from the top */
-    left: 20px; /* Position from the left */
-    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    z-index: 10; /* Ensure menu is above the canvas */
-}
-
-.menu h1 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-.menu button {
-    display: block;
-    margin: 10px 0;
-    padding: 10px 15px;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(34, 34, 34, 0.9); /* Dark semi-transparent background */
     color: white;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 15px; /* Spacing between buttons */
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+}
+
+/* Button styling */
+.toolbar button {
+    background-color: #444; /* Dark gray */
+    color: #fff; /* White text */
+    border: none;
+    border-radius: 4px; /* Rounded corners */
+    padding: 8px 12px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-size: 14px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.menu button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
+/* Button hover effect */
+.toolbar button:hover {
+    background-color: #666; /* Slightly lighter gray */
+    transform: scale(1.05); /* Slightly enlarge the button */
 }
 
-canvas {
-    display: block; /* Remove any default inline spacing */
+/* Button active effect */
+.toolbar button:active {
+    background-color: #222; /* Even darker gray */
+    transform: scale(0.95); /* Slightly shrink the button */
+}
+
+/* Ensure canvas fills the rest of the space */
+#render-target {
+    flex-grow: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: lightgray; /* Placeholder for the canvas background */
 }

@@ -1,105 +1,125 @@
 import * as THREE from 'three';
-import   { OrbitControls }   from 'three/examples/jsm/controls/OrbitControls.js';
-import { createCamera } from './camera'; // Import the createCamera function
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { createCamera } from './camera'; 
+import { createAssetInstance } from '../assets/assets';
 
-export const createScene = (canvas: HTMLCanvasElement) => {
+export const createScene = (canvas: HTMLCanvasElement, currentAction: string | null) => {
     const renderer = new THREE.WebGLRenderer({ canvas });
     const scene = new THREE.Scene();
-    
-    scene.background = new THREE.Color('lightgray')
+    scene.background = new THREE.Color('lightgray');
 
-    //
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let selectedObject: THREE.Mesh | undefined = undefined;
+
+    let meshes: THREE.Mesh[][] = [];
+
+    // Corrected City Type
     interface City {
         size: number;
-        data: { building: string }[][];
-    };
-
-    let meshes = []
+        data: {
+            building: string;
+            info?: any;
+        }[][];
+    }
 
     const initialize = (city: City) => {
         scene.clear();
         meshes = [];
-        
+
         for (let x = 0; x < city.size; x++) {
-            const column: THREE.Mesh[] = []; // specifies type for array column 
-            for (let y = 0; y < city.size; y++){
-                // Ground geometry
-                const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshStandardMaterial({ color: "green" }); // Use MeshStandardMaterial
-                const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set(x, -0.5, y);
-                mesh.castShadow = true; // Enable shadows for the object
-                scene.add(mesh);
-                column.push(mesh);
-
-                // Building geometry
-                const tile = city.data[x][y];
-
-                if (tile.building === "building") {
-                const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
-                const buildingMaterial = new THREE.MeshStandardMaterial({ color: 0x777777 }); // Use MeshStandardMaterial
-                const buildingMesh = new THREE.Mesh(buildingGeometry, buildingMaterial);
-                buildingMesh.position.set(x, 0.5, y);
-                buildingMesh.castShadow = true; // Enable shadows for the object
-                scene.add(buildingMesh);
-                column.push(buildingMesh);
+            const column: THREE.Mesh[] = [];
+            for (let y = 0; y < city.size; y++) {
+                const groundMesh = createAssetInstance('grass', x, y);
+                if (groundMesh) {
+                    const material = new THREE.MeshStandardMaterial({ color: 'darkgreen' });
+                    groundMesh.material = material;
+                    groundMesh.userData = {
+                        type: 'ground',
+                        position: { x, y }, // Store position of ground tile
+                        info: city.data[x][y].info,
+                        originalColor: material.color.getHex(),
+                    };
+                    scene.add(groundMesh);
+                    column.push(groundMesh);
                 }
-                
             }
             meshes.push(column);
         }
-    }
-    
-
-    // Function to initialize controls
-    const initializeControls = (camera: THREE.PerspectiveCamera) => {
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.25;
-        controls.enableZoom = true;
-        controls.minDistance = 5;
-        controls.maxDistance = 10;
-        controls.maxPolarAngle = Math.PI / 2;
-        controls.minPolarAngle = 0;
-        return controls;
     };
 
-    // Use the createCamera function to create the camera
+    const onMouseMove = (event: MouseEvent) => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    };
+
+    const onClick = () => {
+        raycaster.setFromCamera(mouse, camera);
+
+        const flatMeshes = meshes.flat();
+        const intersects = raycaster.intersectObjects(flatMeshes);
+
+        if (intersects.length > 0) {
+            const clickedObject = intersects[0].object;
+
+            if (!(clickedObject instanceof THREE.Mesh)) return;
+
+            // Update selectedObject
+            selectedObject = clickedObject;
+
+            // Check action and apply changes accordingly
+            if (currentAction === 'addBuilding') {
+                const buildingMesh = createAssetInstance('residential', clickedObject.userData.position.x, clickedObject.userData.position.y);
+                if (buildingMesh) {
+                    buildingMesh.material = new THREE.MeshStandardMaterial({ color: 0x777777 });
+                    buildingMesh.userData = { type: 'building', position: clickedObject.userData.position };
+                    scene.add(buildingMesh);
+                }
+            } else if (currentAction === 'removeBuilding') {
+                if (clickedObject.userData.type === 'building') {
+                    scene.remove(clickedObject);
+                }
+            } else if (currentAction === 'addRoad') {
+                const roadMesh = createAssetInstance('road', clickedObject.userData.position.x, clickedObject.userData.position.y);
+                if (roadMesh) {
+                    roadMesh.material = new THREE.MeshStandardMaterial({ color: 'black'});
+                    roadMesh.userData = { type: 'road', position: clickedObject.userData.position };
+                    scene.add(roadMesh);
+                }
+                
+            } else if (currentAction === 'removeRoad') {
+                if (clickedObject.userData.type === 'road') {
+                    clickedObject.material.color.set('darkgreen');
+                    clickedObject.userData.type = 'ground';
+                }
+            }
+        }
+    };
+
+    // Add event listeners for mouse move and click
+    renderer.domElement.addEventListener('mousemove', onMouseMove);
+    renderer.domElement.addEventListener('click', onClick);
+
     const camera = createCamera(window.innerWidth / window.innerHeight);
-
-    // Call the setUpLighting
-    setupLighting(scene)
-
-    // Set the renderer size
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    renderer.shadowMap.enabled = true; // Enable shadow maps if needed
+    // Initialize OrbitControls for the camera
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.25;
 
-    // Initialize controls
-    const controls = initializeControls(camera);
-
-    return { 
-        scene, 
-        camera, 
-        renderer, 
-        controls, 
-        initialize, 
-        setupLighting
-    };
-
+    return { scene, camera, renderer, controls, initialize };
 };
 
+// Lighting setup
 export const setupLighting = (scene: THREE.Scene) => {
-    // Ambient Light
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
     scene.add(ambientLight);
 
-    // Directional Light
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 8);
-    directionalLight.position.set(10, 10, 10);
-    directionalLight.castShadow = true; // Enable shadows
-    scene.add(directionalLight);
-};
-
-
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    directionalLight.position.set(10,10,10);
+    directionalLight.castShadow = true;
+    scene.add(directionalLight)
+}

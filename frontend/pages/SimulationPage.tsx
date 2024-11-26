@@ -1,73 +1,23 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../styles/SimulationPage.css';
 import { createScene, setupLighting } from '../src/functions/scene';
-import { createCity, initialize } from '../src/functions/city';
+import { createCity } from '../src/functions/city';
 import * as THREE from 'three';
 
 const SimulationPage: React.FC = () => {
-    const city = createCity(8); // Create the city with a specified size
+    const city = createCity(12); // Create the city with a specified size
+
+    // State to track the current action
+    const [currentAction, setCurrentAction] = useState<'addBuilding' | 'removeBuilding' | 'addRoad' | 'removeRoad' | null>(null);
 
     useEffect(() => {
         const canvas = document.getElementById('render-target') as HTMLCanvasElement;
-        const { scene, camera, renderer, controls } = createScene(canvas);
+        const { scene, camera, renderer, controls, initialize } = createScene(canvas, currentAction);
         initialize(city); // Initialize the scene with the city
+        setupLighting(scene);
 
-        // Raycaster and mouse vector
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
-        const onMouseMove = (event: MouseEvent) => {
-            // Calculate mouse position in normalized device coordinates
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        };
-
-        // Initialize the scene with the city data
-        const initializeScene = () => {
-            scene.clear(); // Clear the previous scene
-            setupLighting(scene)
-
-            let delay = 0; // Initialize delay
-
-            // Create an array of all possible coordinates
-            const coordinates: { x: number; y: number }[] = [];
-            for (let x = 0; x < city.size; x++) {
-                for (let y = 0; y < city.size; y++) {
-                    coordinates.push({ x, y });
-                }
-            }
-
-            // Shuffle the coordinates array
-            for (let i = coordinates.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [coordinates[i], coordinates[j]] = [coordinates[j], coordinates[i]];
-            }
-
-            // Add ground and buildings based on shuffled coordinates
-            coordinates.forEach(({ x, y }) => {
-                // Ground geometry
-                const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshLambertMaterial({ color: "green" });
-                const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set(x, -0.5, y);
-                scene.add(mesh); // Add ground tile to the scene
-
-                // Building geometry
-                if (city.data[x][y].building === 'building') {
-                    // Use setTimeout to add buildings with a delay
-                    setTimeout(() => {
-                        const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
-                        const buildingMaterial = new THREE.MeshStandardMaterial({ color: 0x777777 });
-                        const buildingMesh = new THREE.Mesh(buildingGeometry, buildingMaterial);
-                        buildingMesh.position.set(x, 0.5, y);
-                        scene.add(buildingMesh); // Add building to the scene
-                    }, delay);
-                    delay += 1000; // Increase delay for the next building (100ms)
-                }
-            });
-        };
-
-        initializeScene(); // Call to initialize the scene with buildings
+        camera.position.set(20, 20, 20);
+        camera.lookAt(new THREE.Vector3(city.size / 2, 0, city.size / 2));
 
         let animationId: number;
         const animate = () => {
@@ -77,15 +27,21 @@ const SimulationPage: React.FC = () => {
         };
         animate();
 
-        // Cleanup function to remove event listener and dispose of the renderer
         return () => {
             cancelAnimationFrame(animationId);
             renderer.dispose();
         };
-    }, [city]); // Add city as a dependency to ensure it updates correctly
+    }, [city, currentAction]); // Reinitialize on action change
 
     return (
         <div className="simulation-container">
+            <div className="toolbar">
+                <button onClick={() => setCurrentAction(null)}>Reset Action</button>
+                <button onClick={() => setCurrentAction('addBuilding')}>Add Building</button>
+                <button onClick={() => setCurrentAction('removeBuilding')}>Remove Building</button>
+                <button onClick={() => setCurrentAction('addRoad')}>Add Road</button>
+                <button onClick={() => setCurrentAction('removeRoad')}>Remove Road</button>
+            </div>
             <canvas id="render-target" style={{ width: '100%', height: '100%' }} />
         </div>
     );
